@@ -1,0 +1,19 @@
+{ 
+    "random_state": 42,
+    "watersheds": ["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9"],
+    "extended_waters": ["W101", "ML70", "HBK"],
+    "hydro_ref_watershed": "W3",
+    "biogeochem_ref_watershed": "W6",
+    "data": {
+        "path": "data/HB_weekly_stream_chem/watersheds.xlsx",
+        "resolution": 1,
+        "resolution_unit": "week"
+    },
+    "plot": {
+        "single_series_figsize": [10, 5],
+        "nrowls": 3,
+        "ncols": 3,
+        "multi_series_figsize": [16, 12]
+    }
+
+}
