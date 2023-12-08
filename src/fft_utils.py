@@ -60,7 +60,6 @@ class FourierSpectrumPlot:
         if ax is None:
             ax = plt.gca()
         self.ax = ax
-        self.data = None
 
     def plot(self, power_spectrum: pd.Series, **kwargs):
         """
@@ -75,9 +74,12 @@ class FourierSpectrumPlot:
             Keyword arguments passed to ``matplotlib.axes.Axes.stem``.
 
         """
-        self.data = power_spectrum
         self.ax.stem(
-            power_spectrum.index, power_spectrum, markerfmt="", basefmt="C0-", **kwargs
+            power_spectrum.index,
+            power_spectrum,
+            markerfmt="",
+            basefmt="C0-",
+            **kwargs
         )
         self.ax.set_xscale("log")
         self.ax.set_xlabel(power_spectrum.index.name)

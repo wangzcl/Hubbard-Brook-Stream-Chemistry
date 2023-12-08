@@ -61,24 +61,22 @@ class SeriesPlotWithMissingValues:
         if ax is None:
             ax = plt.gca()
         self.ax = ax
-        self.data = None
-        self.missing = None
+        self.n_data_ = None
+        self.n_missing_ = None
         return
 
-    def plot(self, data: pd.Series, missing_yloc=None):
+    def plot(self, data: pd.Series, missing_yloc=None, **kwargs):
         """
         Plot the series. You may specify the y location of the missing values.
         """
         missing = data[data.isna()]
-        data.dropna().plot(ax=self.ax)
-
-        self.data = data
-        self.missing = missing
+        data.dropna().plot(ax=self.ax, **kwargs)
+        self.n_data_ = len(data)
+        self.n_missing_ = len(missing)
 
         ymin, ymax = self.ax.get_ylim()
         if missing_yloc is None:
             missing_yloc = 0.98 * ymin + 0.02 * ymax
-        missing = missing.copy()
         missing[:] = missing_yloc
 
         missing.plot(

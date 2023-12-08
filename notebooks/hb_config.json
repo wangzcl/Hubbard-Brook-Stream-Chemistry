@@ -6,7 +6,19 @@
     "biogeochem_ref_watershed": "W6",
     "data": {
         "path": "data/HB_weekly_stream_chem/watersheds.xlsx",
-        "resolution": 1,
-        "resolution_unit": "week"
+
+        "DIC":
+        {
+            "resolution": 1,
+            "resolution_unit": "week",
+            "unit": "mmol/L"
+        },
+        
+        "pH":
+        {
+            "resolution": 1,
+            "resolution_unit": "week",
+            "unit": null
+        }
     }
 }
