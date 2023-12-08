@@ -12,6 +12,7 @@ from sklearn.utils import resample
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Molar mass data from IUPAC periodic table (May 4 2022)
 MOLAR_MASS = {
     "Ca": 40.078,
     "Mg": 24.305,
@@ -36,9 +37,10 @@ class NMFPreprocessor:
         Convert weight to moles.
     weight_ignore : str, default "DIC"
         The column name of the weight to ignore when converting weight to moles.
-    normalizer : str, default "Na"
+    normalizer : str or None, default ``None``
         The column name of the normalizer.
-        Other columns will be divided by this column. Default is sodium.
+        Other columns will be divided by this column. Default is ``None``
+        (do not perform normalization).
     rescale : bool, default True
         Rescale the data to <=1.
     bootstrap : int, default None
@@ -63,7 +65,6 @@ class NMFPreprocessor:
         bootstrap: int | None = None,
         bootstrap_random_state: int | None = None,
     ) -> None:
-        # Molar mass data from IUPAC periodic table (May 4 2022)
         self.dropna = dropna
         self.convert_weight = convert_weight
         self.weight_ignore = weight_ignore
@@ -104,13 +105,13 @@ class NMFPreprocessor:
         df /= scaler
         # StandardScaler(with_mean=False).fit_transform(df)
 
-    def _bootstrap(self, df: pd.DataFrame, n_samples=None) -> pd.DataFrame:
+    def _bootstrap(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         It does not operate in place.
         """
-        if n_samples is None:
-            n_samples = self.bootstrap
-        df = resample(df, n_samples=n_samples, random_state=self.bootstrap_random_state)
+        df = resample(
+            df, n_samples=self.bootstrap, random_state=self.bootstrap_random_state
+        )
         return df
 
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -142,15 +143,30 @@ class ChemistryHeatmap:
         self.ax = ax
 
     def plot(self, data: npt.ArrayLike, xlabels: npt.ArrayLike) -> None:
+        """
+        Plot the heatmap.
+        """
         sns.heatmap(data, annot=True, cmap="YlGnBu", xticklabels=xlabels)
 
 
 def count_endmember(pca: PCA, thres=0.9):
+    """
+    We explain the number of principal components that explain 90% of the variance
+    as the number of endmembers. You can manually adjust the 90% threshold.
+
+    Parameters
+    ----------
+
+    pca : sklearn.decomposition.PCA
+        PCA model.
+    thres : float, default 0.9
+        The threshold of explained variance ratio.
+    """
     n_endmember = np.count_nonzero(np.cumsum(pca.explained_variance_ratio_) < thres) + 1
     return n_endmember
 
 
-class NMFResizer:
+class NMFTrivialResizer:
     """
     Resize the NMF result matrix ``w`` and ``h`` with a number ``k``.
 
@@ -178,20 +194,22 @@ class NMFResizer:
         self.k = None
         self.sigma = None
 
-    def _init_factor(self, W: npt.ArrayLike) -> float:
-        proportion_sum = W.sum(axis=1)
+    def fit(self, w: npt.ArrayLike) -> float:
+        proportion_sum = w.sum(axis=1)
         log_proportion_sum = np.log(proportion_sum)
         k = math.e ** log_proportion_sum.mean()
         self.k = k
-        self.sigma = np.std(log_proportion_sum, ddof=1)
+        sigma = np.std(log_proportion_sum, ddof=1)
+        self.sigma = sigma
+        return k, sigma
 
-    def transform(
+    def fit_transform(
         self, w, h, inplace=False
     ) -> tuple[npt.ArrayLike, npt.ArrayLike] | None:
         """
         Conduct the transformation.
         """
-        self._init_factor(w)
+        self.fit(w)
         if inplace:
             w /= self.k
             h *= self.k
@@ -201,7 +219,7 @@ class NMFResizer:
         return w, h
 
 
-class NMFPermuter:
+class NMFKmeansPermuter:
     """
     Permute endmembers in chemistry matrices (H) by KMeans,
     so that the orders are the same in different matrices (or NMF results).
