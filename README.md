@@ -1,0 +1,1 @@
+Just some code I used for doing Fourier transform and non-negative matrix factorization (NMF) on Hubbard Brook stream chemistry data, as a course project for CEE 657 biogeochemistry (2023 fall), taught by Charles Driscoll, Syracuse University.
